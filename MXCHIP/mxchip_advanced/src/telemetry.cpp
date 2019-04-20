@@ -160,8 +160,8 @@ void TelemetryController::loop() {
         //Smart Refrigerator handling
         if(temperatureDifferenceSetting > 0) {
             float temp = Globals::sensorController.readTemperature();
-            if(desiredTemperatureSetting + temperatureDifferenceSetting > (int)temp ||
-               desiredTemperatureSetting - temperatureDifferenceSetting < (int)temp
+            if((desiredTemperatureSetting + temperatureDifferenceSetting) < (int)temp ||
+               (desiredTemperatureSetting - temperatureDifferenceSetting) > (int)temp
             ) {
                 char buff[STRING_BUFFER_128] = {0};
                 snprintf(buff, 
