@@ -18,10 +18,16 @@ public:
     static void storeIotCentralConfig(StringBuffer &iotCentralConfig);
     static void storeKey(StringBuffer &auth, StringBuffer &scopeId, StringBuffer &regId, StringBuffer &key);
 
+    static void storeDesiredTemperature(StringBuffer &desiredTemperature);
+    static void storeDifferenceTemperature(StringBuffer &differenceTemperature);
+
     static void readWiFi(char* ssid, int ssidLen, char *password, int passwordLen);
     static void readConnectionString(char * connectionString, uint32_t buffer_size);
     static void readIotCentralConfig(char * iotCentralConfig, uint32_t buffer_size);
     static void readGroupSXKeyAndDeviceId(char * scopeId, char * registrationId, char * sas, char &atype);
+
+    static void readDesiredTemperature(char ** desiredTemperature, uint32_t buffer_size);
+    static void readDifferenceTemperature(char ** differenceTemperature, uint32_t buffer_size);
 
     static void clearWiFiEEPROM();
     static void clearAzureEEPROM();

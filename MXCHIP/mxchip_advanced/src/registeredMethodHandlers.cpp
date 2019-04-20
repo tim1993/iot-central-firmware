@@ -244,3 +244,66 @@ int irOnDesiredChange(const char *message, size_t size) {
     StatsController::incrementDesiredCount();
     return 0;
 }
+
+int sendingIntervalDesiredChange(const char *message, size_t size) {
+    LOG_VERBOSE("setSendingInterval desired property just got called");
+
+    Screen.clean();
+    JSObject json(message);
+    JSObject setSendingInterval;
+    json.getObjectByName("setSendingInterval",&setSendingInterval);
+    int sendingInterval = (int)setSendingInterval.getNumberByName("value");
+    
+    ((TelemetryController*)Globals::loopController)->changeSendInterval(sendingInterval);
+    char buff[STRING_BUFFER_128] = {0};
+    snprintf(buff, STRING_BUFFER_128 - 1, "%i", sendingInterval);
+    
+    Screen.print(0, "SendingInterval was set to:");
+    Screen.print(1, buff);
+
+    delay(5000);
+    StatsController::incrementDesiredCount();
+    return 0;
+}
+
+int desiredTemperatureDesiredChange(const char *message, size_t size) {
+    LOG_VERBOSE("desired temperature desired property just got called");
+
+    Screen.clean();
+    JSObject json(message);
+    JSObject desiredTemperatureObject;
+    json.getObjectByName("desiredTemperature",&desiredTemperatureObject);
+    int desiredTemperature = (int)desiredTemperatureObject.getNumberByName("value");
+    
+    ((TelemetryController*)Globals::loopController)->changeDesiredTemperature(desiredTemperature);
+    char buff[STRING_BUFFER_128] = {0};
+    snprintf(buff, STRING_BUFFER_128 - 1, "%i", desiredTemperature);
+    
+    Screen.print(0, "DesiredTemperature was set to:");
+    Screen.print(1, buff);
+
+    delay(5000);
+    StatsController::incrementDesiredCount();
+    return 0;
+}
+
+int temperatureDifferenceDesiredChange(const char *message, size_t size) {
+    LOG_VERBOSE("temperatureDifference desired property just got called");
+
+    Screen.clean();
+    JSObject json(message);
+    JSObject temperatureDifferenceObject;
+    json.getObjectByName("temperatureDifference",&temperatureDifferenceObject);
+    int temperatureDifference = (int)temperatureDifferenceObject.getNumberByName("value");
+    
+    ((TelemetryController*)Globals::loopController)->changeTemperatureDifference(temperatureDifference);
+    char buff[STRING_BUFFER_128] = {0};
+    snprintf(buff, STRING_BUFFER_128 - 1, "%i", temperatureDifference);
+    
+    Screen.print(0, "TemperatureDifference was set to:");
+    Screen.print(1, buff);
+
+    delay(5000);
+    StatsController::incrementDesiredCount();
+    return 0;
+}

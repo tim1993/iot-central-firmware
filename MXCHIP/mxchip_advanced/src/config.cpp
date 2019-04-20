@@ -33,6 +33,16 @@ void ConfigController::storeIotCentralConfig(StringBuffer &iotCentralConfig) {
     eeprom.write((uint8_t*) *iotCentralConfig, iotCentralConfig.getLength(), IOT_CENTRAL_ZONE_IDX);
 }
 
+void ConfigController::storeDesiredTemperature(StringBuffer &desiredTemperature) {
+    EEPROMInterface eeprom;
+    eeprom.write((uint8_t*) *desiredTemperature, desiredTemperature.getLength(), STSAFE_ZONE_7_IDX);
+}
+
+void ConfigController::storeDifferenceTemperature(StringBuffer &differenceTemperature) {
+    EEPROMInterface eeprom;
+    eeprom.write((uint8_t*) *differenceTemperature, differenceTemperature.getLength(), STSAFE_ZONE_7_IDX);
+}
+
 // Unused. Left here for sample
 void ConfigController::readWiFi(char* ssid, int ssidLen, char *password, int passwordLen) {
     EEPROMInterface eeprom;
@@ -63,6 +73,22 @@ void ConfigController::readConnectionString(char* connectionString, uint32_t buf
     assert(sizeof(IOT_CENTRAL_CONNECTION_STRING) - 1 < buffer_size);
     strcpy(connectionString, IOT_CENTRAL_CONNECTION_STRING);
 #endif // !defined(IOT_CENTRAL_CONNECTION_STRING)
+}
+
+void ConfigController::readDesiredTemperature(char** desiredTemperature, uint32_t buffer_size) {
+    char buffer[STRING_BUFFER_16];
+    EEPROMInterface eeprom;
+    assert(buffer_size == STRING_BUFFER_16);
+    eeprom.read((uint8_t*) buffer, STRING_BUFFER_16, 0, STSAFE_ZONE_7_IDX);
+    *desiredTemperature = buffer;
+}
+
+void ConfigController::readDifferenceTemperature(char** differenceTemperature, uint32_t buffer_size) {
+    char buffer[STRING_BUFFER_16];
+    EEPROMInterface eeprom;
+    assert(buffer_size == STRING_BUFFER_16);
+    eeprom.read((uint8_t*) buffer, STRING_BUFFER_16, 0, STSAFE_ZONE_7_IDX);
+    *differenceTemperature = buffer;
 }
 
 void ConfigController::storeKey(StringBuffer &auth, StringBuffer &scopeId, StringBuffer &regId, StringBuffer &key) {

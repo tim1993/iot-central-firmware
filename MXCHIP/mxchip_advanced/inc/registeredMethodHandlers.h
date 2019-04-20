@@ -10,6 +10,8 @@ int fanSpeedDesiredChange(const char *message, size_t size);
 int voltageDesiredChange(const char *message, size_t size);
 int currentDesiredChange(const char *message, size_t size);
 int irOnDesiredChange(const char *message, size_t size);
-
+int sendingIntervalDesiredChange(const char *message, size_t size);
+int desiredTemperatureDesiredChange(const char *message, size_t size);
+int temperatureDifferenceDesiredChange(const char *message, size_t size);
 
 #endif /* REGISTERED_METHOD_HANDLERS_H */

@@ -55,7 +55,24 @@ void TelemetryController::initializeTelemetryController(const char * iotCentralC
     iotClient->registerCallback("setVoltage", voltageDesiredChange);
     iotClient->registerCallback("setCurrent", currentDesiredChange);
     iotClient->registerCallback("activateIR", irOnDesiredChange);
+    iotClient->registerCallback("setSendingInterval", sendingIntervalDesiredChange);
+    iotClient->registerCallback("desiredTemperature", desiredTemperatureDesiredChange);
+    iotClient->registerCallback("temperatureDifference", temperatureDifferenceDesiredChange);
 
+    //read refrigerator configuration
+    char* readDesiredTemperature;
+    ConfigController::readDesiredTemperature(&readDesiredTemperature, STRING_BUFFER_16);
+    if(readDesiredTemperature != NULL) {
+        desiredTemperatureSetting = (int)*(readDesiredTemperature + 0);
+    }
+    
+
+    char* readTemperatureDifference;
+    ConfigController::readDifferenceTemperature(&readTemperatureDifference, STRING_BUFFER_16);
+    if(readTemperatureDifference != NULL) {
+        temperatureDifferenceSetting = (int)*(readTemperatureDifference + 1);
+    }
+    
     // show the state of the device on the RGB LED
     DeviceControl::showState();
 
@@ -73,6 +90,8 @@ void TelemetryController::initializeTelemetryController(const char * iotCentralC
 static int  locationDataOffset = 0;
 static char locationString[STRING_BUFFER_128];
 static int  sendCount = -1;
+
+int  telemetrySendInterval = TELEMETRY_SEND_INTERVAL;
 
 void TelemetryController::loop() {
     // if we are about to reset then stop sending/processing any telemetry
@@ -112,23 +131,12 @@ void TelemetryController::loop() {
     if (DeviceControl::IsButtonClicked(USER_BUTTON_B) &&
         (currentMillis - lastSwitchPress > TELEMETRY_SWITCH_DEBOUNCE_TIME)) {
 
-        currentInfoPage = (currentInfoPage + 1) % 3;
+        currentInfoPage = (currentInfoPage + 1) % 4;
         lastSwitchPress = currentMillis;
-
-        // SEND EVENT example
-        // build the event payload
-        const char * eventString = "{\"ButtonBPressed\": \"occurred\"}";
-        if (iotClient->sendTelemetry(eventString)) {
-            LOG_VERBOSE("Event successfully sent");
-            StatsController::incrementReportedCount();
-        } else {
-            LOG_ERROR("Sending event has failed");
-            StatsController::incrementErrorCount();
-        }
     }
 
     // example of sending telemetry data
-    if (canSend() && currentMillis - lastTelemetrySend >= TELEMETRY_SEND_INTERVAL) {
+    if (canSend() && currentMillis - lastTelemetrySend >= telemetrySendInterval) {
         setCanSend(false); // wait until the telemetry is sent
 
         // send location once on each fifth (aprox 30 secs)
@@ -147,6 +155,30 @@ void TelemetryController::loop() {
                 StatsController::incrementErrorCount();
             }
             sendCount = 0;
+        }
+
+        //Smart Refrigerator handling
+        if(temperatureDifferenceSetting > 0) {
+            float temp = Globals::sensorController.readTemperature();
+            if(desiredTemperatureSetting + temperatureDifferenceSetting > (int)temp ||
+               desiredTemperatureSetting - temperatureDifferenceSetting < (int)temp
+            ) {
+                char buff[STRING_BUFFER_128] = {0};
+                snprintf(buff, 
+                        STRING_BUFFER_128 - 1, 
+                        "{\"tempAlert\": \" TEMPERATURE ALARM: desired temperature: %i °C, Temperature Difference: %i °C, current temperature: %.2f \"}", 
+                        desiredTemperatureSetting, 
+                        temperatureDifferenceSetting, 
+                        temp
+                );
+                if (iotClient->sendTelemetry(buff)) {
+                    LOG_VERBOSE("Event successfully sent");
+                    StatsController::incrementReportedCount();
+                } else {
+                    LOG_ERROR("Sending event has failed");
+                    StatsController::incrementErrorCount();
+                }
+            }
         }
 
         String payload; // max payload size for Azure IoT
@@ -198,7 +230,21 @@ void TelemetryController::loop() {
     }
 
     switch (currentInfoPage) {
-        case 0: // message counts - page 1
+        case 0: // Refrigerator - page 1
+        {
+            double temp = Globals::sensorController.readTemperature();
+            char buff[STRING_BUFFER_128] = {0};
+            snprintf(buff, STRING_BUFFER_128 - 1,
+                    "%s\r\nTemp: %.2f\r\nDesired: %d\r\nDifference: %d",
+                    "-- Refrigerator --",
+                    temp,
+                    desiredTemperatureSetting,
+                    temperatureDifferenceSetting);
+
+            Screen.print(0, buff);
+        }
+            break;
+        case 1: // message counts - page 2
         {
             char buff[STRING_BUFFER_128] = {0};
             snprintf(buff, STRING_BUFFER_128 - 1,
@@ -212,10 +258,10 @@ void TelemetryController::loop() {
             Screen.print(0, buff);
         }
             break;
-        case 1: // Device information
+        case 2: // Device information
             iotClient->displayDeviceInfo();
             break;
-        case 2:  // Network information
+        case 3:  // Network information
             Globals::wiFiController.displayNetworkInfo();
             break;
     }
@@ -337,4 +383,43 @@ void TelemetryController::sendStateChange() {
     sendTelemetryPayload(stateMessage);
     iotClient->hubClientYield();
     delay(1);  // good practice to help prevent lockups
+}
+
+void TelemetryController::changeSendInterval(int sendInterval) {
+    telemetrySendInterval = sendInterval;
+    delay(1);
+}
+
+/*void TelemetryController::changeDesiredTemperature(int desiredTemperatureValue) {
+    desiredTemperatureSetting = desiredTemperatureValue;
+
+    //store changed desired temperature
+    char buff[STRING_BUFFER_128] = {0};
+    char* desiredTemperatureTemp = itoa(desiredTemperatureValue, buff, 10);
+    StringBuffer desiredTemperature(desiredTemperatureTemp, strlen(desiredTemperatureTemp));
+    ConfigController::storeDesiredTemperature(desiredTemperature);
+    delay(1);
+}*/
+void TelemetryController::changeDesiredTemperature(int desiredTemperatureValue) {
+    desiredTemperatureSetting = desiredTemperatureValue;
+
+    //store changed desired temperature
+    refrigeratorBuff[0] = (char)desiredTemperatureValue;
+    refrigeratorBuff[1] = (char)temperatureDifferenceSetting;
+    char* p = &refrigeratorBuff[0];
+    StringBuffer desiredTemperature(p, strlen(p));
+    ConfigController::storeDesiredTemperature(desiredTemperature);
+    delay(1);
+}
+
+void TelemetryController::changeTemperatureDifference(int temperatureDifferenceValue) {
+    temperatureDifferenceSetting = temperatureDifferenceValue;
+
+    //store changed temperature difference
+    refrigeratorBuff[0] = (char)desiredTemperatureSetting;
+    refrigeratorBuff[1] = (char)temperatureDifferenceValue;
+    char* p = &refrigeratorBuff[0];
+    StringBuffer temperatureDifference(p, strlen(p));
+    ConfigController::storeDesiredTemperature(temperatureDifference);
+    delay(1);
 }

@@ -310,3 +310,4 @@ MBED_OS/GettingStarted.html
 MBED_OS/.mbedignore
 MBED_OS/.mbed
 MBED_OS/mbed-os/
+MXCHIP/mxchip_advanced/.build/

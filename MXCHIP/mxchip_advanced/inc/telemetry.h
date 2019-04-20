@@ -18,6 +18,9 @@ class TelemetryController : public LoopController
     unsigned long lastSwitchPress;
     int currentInfoPage;
     int lastInfoPage;
+    int  desiredTemperatureSetting = 0;
+    int  temperatureDifferenceSetting = 0;
+    char refrigeratorBuff[STRING_BUFFER_16] = {0};
     uint8_t telemetryState;
     AzureIOTClient * iotClient;
     bool           can_send;
@@ -47,6 +50,10 @@ public:
     bool canSend() { return can_send; }
     void setCanSend(bool s) { can_send = s; }
     void sendStateChange();
+
+    void changeSendInterval(int sendInterval);
+    void changeDesiredTemperature(int desiredTemperature);
+    void changeTemperatureDifference(int temperatureDifference);
 };
 
 #endif // TELEMETRY_CONTROLLER
