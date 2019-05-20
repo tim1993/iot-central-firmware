@@ -390,16 +390,6 @@ void TelemetryController::changeSendInterval(int sendInterval) {
     delay(1);
 }
 
-/*void TelemetryController::changeDesiredTemperature(int desiredTemperatureValue) {
-    desiredTemperatureSetting = desiredTemperatureValue;
-
-    //store changed desired temperature
-    char buff[STRING_BUFFER_128] = {0};
-    char* desiredTemperatureTemp = itoa(desiredTemperatureValue, buff, 10);
-    StringBuffer desiredTemperature(desiredTemperatureTemp, strlen(desiredTemperatureTemp));
-    ConfigController::storeDesiredTemperature(desiredTemperature);
-    delay(1);
-}*/
 void TelemetryController::changeDesiredTemperature(int desiredTemperatureValue) {
     desiredTemperatureSetting = desiredTemperatureValue;
 
