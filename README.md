@@ -1,5 +1,7 @@
 ## Azure IoT Central Device / Platform Sample projects
 
+Modification by tim1993 - This firmware shows how it is possible to store data permanently with the MXChip, so that set values are retained even after a restart. You can find the modified version in MXChip/mxchip_advanced.
+
 Reference firmware / sample implementation repository for some of the supported devices / frameworks.
 
 - **Are you looking for a particular device sample?**
